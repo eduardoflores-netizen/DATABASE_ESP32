@@ -3,34 +3,68 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Control IoT ESP32</title>
+<title>ESP32 Quantum Control</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-  body { background:#0f172a; color:white; font-family:sans-serif; }
-  .card { background:#1e293b; padding:20px; border-radius:16px; margin:15px 0; }
-  button { padding:10px 15px; border-radius:10px; font-weight:bold; }
+body{
+  background: radial-gradient(circle at top, #0f0f1a, #050510);
+  color:#00ffff;
+  font-family: 'Segoe UI', sans-serif;
+}
+.card{
+  background: rgba(0,255,255,0.05);
+  border:1px solid rgba(0,255,255,0.3);
+  box-shadow: 0 0 20px rgba(0,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border-radius:20px;
+  padding:25px;
+}
+.btn{
+  padding:12px;
+  border-radius:12px;
+  font-weight:bold;
+  transition:0.2s;
+}
+.btn-on{
+  background:#00ffff;
+  color:black;
+  box-shadow:0 0 15px #00ffff;
+}
+.btn-off{
+  background:#111827;
+  border:1px solid #00ffff;
+}
+.status{
+  padding:8px 15px;
+  border-radius:30px;
+  display:inline-block;
+}
 </style>
 </head>
 
 <body class="p-6">
 
-<h1 class="text-2xl font-bold mb-4">Control IoT ESP32</h1>
+<h1 class="text-3xl font-bold mb-6 text-center">⚡ ESP32 QUANTUM CONTROL ⚡</h1>
 
-<div id="status" class="mb-4 text-red-400">Desconectado</div>
+<div id="status" class="status bg-red-600 text-white mb-6">Desconectado</div>
 
-<div class="card">
-  <h2>Sala</h2>
-  <button onclick="updateState('sala', true)" class="bg-yellow-400 text-black">ON</button>
-  <button onclick="updateState('sala', false)" class="bg-gray-600">OFF</button>
-</div>
+<div class="grid md:grid-cols-2 gap-6">
 
-<div class="card">
-  <h2>Laboratorio</h2>
-  <button onclick="updateState('laboratorio', true)" class="bg-blue-400 text-black">ON</button>
-  <button onclick="updateState('laboratorio', false)" class="bg-gray-600">OFF</button>
+  <div class="card text-center">
+    <h2 class="text-xl mb-4">Sala Principal</h2>
+    <button onclick="updateState('sala', true)" class="btn btn-on w-full mb-2">ENCENDER</button>
+    <button onclick="updateState('sala', false)" class="btn btn-off w-full">APAGAR</button>
+  </div>
+
+  <div class="card text-center">
+    <h2 class="text-xl mb-4">Laboratorio</h2>
+    <button onclick="updateState('laboratorio', true)" class="btn btn-on w-full mb-2">ENCENDER</button>
+    <button onclick="updateState('laboratorio', false)" class="btn btn-off w-full">APAGAR</button>
+  </div>
+
 </div>
 
 <script type="module">
@@ -39,56 +73,40 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 let db;
 
-function pedirDatos() {
-  Swal.fire({
-    title: 'Configurar Firebase',
-    html:
-      '<input id="apiKey" class="swal2-input" placeholder="API KEY">' +
-      '<input id="dbUrl" class="swal2-input" placeholder="DATABASE URL">',
-    confirmButtonText: 'Conectar',
-    focusConfirm: false,
-    preConfirm: () => {
-      return {
-        apiKey: document.getElementById('apiKey').value,
-        dbUrl: document.getElementById('dbUrl').value
-      }
-    }
-  }).then(result => {
-    if(result.value){
-      localStorage.setItem("apiKey", result.value.apiKey);
-      localStorage.setItem("dbUrl", result.value.dbUrl);
-      initFirebase(result.value.apiKey, result.value.dbUrl);
-    }
-  });
+function pedirDatos(){
+Swal.fire({
+title:'Configurar Firebase',
+html:
+'<input id="apiKey" class="swal2-input" placeholder="API KEY">'+
+'<input id="dbUrl" class="swal2-input" placeholder="DATABASE URL">',
+confirmButtonText:'Conectar'
+}).then(r=>{
+if(r.value){
+localStorage.setItem("apiKey", apiKey.value);
+localStorage.setItem("dbUrl", dbUrl.value);
+initFirebase(apiKey.value, dbUrl.value);
+}
+});
 }
 
-function initFirebase(apiKey, databaseURL){
-  const firebaseConfig = { apiKey, databaseURL };
-  const app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-
-  const casaRef = ref(db, 'casa');
-  onValue(casaRef, (snapshot)=>{
-    document.getElementById("status").innerText="Conectado a Firebase";
-    document.getElementById("status").className="text-green-400";
-  });
+function initFirebase(apiKey,databaseURL){
+const app = initializeApp({apiKey,databaseURL});
+db=getDatabase(app);
+onValue(ref(db,'casa'),()=>{
+status.innerText="Conectado a Firebase";
+status.className="status bg-green-600 text-white";
+});
 }
 
-window.updateState = function(foco, estado){
-  if(!db) return Swal.fire("Configura primero");
-  set(ref(db, 'casa/' + foco), estado);
+window.updateState=(foco,estado)=>{
+if(!db) return Swal.fire("Configura Firebase primero");
+set(ref(db,'casa/'+foco),estado);
 }
 
-const savedKey = localStorage.getItem("apiKey");
-const savedUrl = localStorage.getItem("dbUrl");
-
-if(savedKey && savedUrl){
-  initFirebase(savedKey, savedUrl);
-}else{
-  pedirDatos();
-}
+const k=localStorage.getItem("apiKey");
+const u=localStorage.getItem("dbUrl");
+if(k&&u){initFirebase(k,u);}else{pedirDatos();}
 </script>
 
 </body>
 </html>
-
