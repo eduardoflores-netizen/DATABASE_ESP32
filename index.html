@@ -1,68 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ESP32 Quantum Control</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Neural Command</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
 body{
-  background: radial-gradient(circle at top, #0f0f1a, #050510);
-  color:#00ffff;
-  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top,#0a0f1f,#02040a);
+  color:#00f7ff;
+  font-family:'Segoe UI',sans-serif;
+  overflow-x:hidden;
+}
+.glow{
+  box-shadow:0 0 20px #00f7ff;
 }
 .card{
-  background: rgba(0,255,255,0.05);
+  background:rgba(0,255,255,0.05);
   border:1px solid rgba(0,255,255,0.3);
-  box-shadow: 0 0 20px rgba(0,255,255,0.2);
-  backdrop-filter: blur(10px);
-  border-radius:20px;
+  border-radius:25px;
   padding:25px;
+  backdrop-filter:blur(10px);
 }
 .btn{
-  padding:12px;
+  padding:14px;
   border-radius:12px;
   font-weight:bold;
-  transition:0.2s;
+  transition:0.3s;
 }
-.btn-on{
-  background:#00ffff;
-  color:black;
-  box-shadow:0 0 15px #00ffff;
-}
-.btn-off{
-  background:#111827;
-  border:1px solid #00ffff;
-}
+.on{background:#00f7ff;color:black;box-shadow:0 0 15px #00f7ff;}
+.off{background:#111827;border:1px solid #00f7ff;}
 .status{
-  padding:8px 15px;
-  border-radius:30px;
-  display:inline-block;
+  padding:8px 18px;
+  border-radius:40px;
+  font-size:14px;
 }
+.radar{
+  position:fixed;
+  width:300px;height:300px;
+  border:2px solid rgba(0,255,255,0.3);
+  border-radius:50%;
+  top:-80px;right:-80px;
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 </style>
 </head>
 
 <body class="p-6">
 
-<h1 class="text-3xl font-bold mb-6 text-center">⚡ ESP32 QUANTUM CONTROL ⚡</h1>
+<div class="radar"></div>
 
-<div id="status" class="status bg-red-600 text-white mb-6">Desconectado</div>
+<h1 class="text-3xl font-bold text-center mb-6 tracking-widest glow">
+NEURAL IOT COMMAND
+</h1>
 
-<div class="grid md:grid-cols-2 gap-6">
+<div id="status" class="status bg-red-600 text-white mb-6">SIN CONEXIÓN</div>
+
+<div class="grid md:grid-cols-2 gap-8">
 
   <div class="card text-center">
-    <h2 class="text-xl mb-4">Sala Principal</h2>
-    <button onclick="updateState('sala', true)" class="btn btn-on w-full mb-2">ENCENDER</button>
-    <button onclick="updateState('sala', false)" class="btn btn-off w-full">APAGAR</button>
+    <h2 class="text-xl mb-4">SALA PRINCIPAL</h2>
+    <button onclick="updateState('sala', true)" class="btn on w-full mb-3">ACTIVAR</button>
+    <button onclick="updateState('sala', false)" class="btn off w-full">DESACTIVAR</button>
   </div>
 
   <div class="card text-center">
-    <h2 class="text-xl mb-4">Laboratorio</h2>
-    <button onclick="updateState('laboratorio', true)" class="btn btn-on w-full mb-2">ENCENDER</button>
-    <button onclick="updateState('laboratorio', false)" class="btn btn-off w-full">APAGAR</button>
+    <h2 class="text-xl mb-4">LABORATORIO</h2>
+    <button onclick="updateState('laboratorio', true)" class="btn on w-full mb-3">ACTIVAR</button>
+    <button onclick="updateState('laboratorio', false)" class="btn off w-full">DESACTIVAR</button>
   </div>
 
 </div>
@@ -75,27 +84,28 @@ let db;
 
 function pedirDatos(){
 Swal.fire({
-title:'Configurar Firebase',
-html:
-'<input id="apiKey" class="swal2-input" placeholder="API KEY">'+
-'<input id="dbUrl" class="swal2-input" placeholder="DATABASE URL">',
+title:'Configurar Conexión',
+html:`<input id="k" class="swal2-input" placeholder="API KEY">
+<input id="u" class="swal2-input" placeholder="DATABASE URL">`,
 confirmButtonText:'Conectar'
 }).then(r=>{
-if(r.value){
-localStorage.setItem("apiKey", apiKey.value);
-localStorage.setItem("dbUrl", dbUrl.value);
-initFirebase(apiKey.value, dbUrl.value);
+if(r.isConfirmed){
+localStorage.setItem("apiKey",k.value);
+localStorage.setItem("dbUrl",u.value);
+initFirebase(k.value,u.value);
 }
 });
 }
 
 function initFirebase(apiKey,databaseURL){
-const app = initializeApp({apiKey,databaseURL});
+try{
+const app=initializeApp({apiKey,databaseURL});
 db=getDatabase(app);
 onValue(ref(db,'casa'),()=>{
-status.innerText="Conectado a Firebase";
-status.className="status bg-green-600 text-white";
-});
+status.innerText="CONECTADO A LA NUBE";
+status.className="status bg-green-600 text-white mb-6";
+},err=>console.error(err));
+}catch(e){console.error(e);}
 }
 
 window.updateState=(foco,estado)=>{
@@ -110,3 +120,4 @@ if(k&&u){initFirebase(k,u);}else{pedirDatos();}
 
 </body>
 </html>
+
